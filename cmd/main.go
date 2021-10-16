@@ -12,7 +12,7 @@ var (
 	pin = rpio.Pin(18)
 )
 
-func Init()  {
+func Toggle()  {
 	// Open and map memory to access gpio, check for errors
 	if err := rpio.Open(); err != nil {
 		fmt.Println(err)
@@ -24,17 +24,15 @@ func Init()  {
 
 	// Set pin to output mode
 	pin.Output()
-}
-func Toggle()  {
+
 	pin.Toggle()
 }
 func main() {
-	Init()
 	r := gin.Default()
 	r.GET("/toggle", func(c *gin.Context) {
 		Toggle()
 		c.JSON(200, gin.H{
-			"message": "pong",
+			"message": "OK",
 		})
 	})
 	r.Run("0.0.0.0:60080") // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
