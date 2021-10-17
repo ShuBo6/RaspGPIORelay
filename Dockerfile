@@ -1,6 +1,25 @@
-FROM golang
-RUN wget https://github.com/ShuBo6/RaspGPIORelay/archive/refs/heads/gin.zip
-RUN unzip gin.zip
-RUN cd cmd
-RUN go build -o main main.go
-RUN main
+# Build the manager binary
+FROM golang as builder
+
+WORKDIR /workspace
+# Copy the Go Modules manifests
+COPY go.mod go.mod
+COPY go.sum go.sum
+# cache deps before building and copying source so that we don't need to re-download as much
+# and so that source changes don't invalidate our downloaded layer
+RUN go mod download
+
+# Copy the go source
+COPY cmd/ cmd/
+
+# Build
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm32 GO111MODULE=on go build -a -o lamp cmd/main.go
+
+# Use distroless as minimal base image to package the manager binary
+# Refer to https://github.com/GoogleContainerTools/distroless for more details
+FROM ubuntu
+WORKDIR /
+COPY --from=builder /workspace/lamp .
+USER 60080:60080
+
+ENTRYPOINT ["/lamp"]
